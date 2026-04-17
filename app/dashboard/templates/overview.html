@@ -1,0 +1,178 @@
+{# Overview page — stats + health + bucket info + recent files #}
+{% extends "shell.html" %}
+
+{% block title %}{{ service_name }} — Resumen{% endblock %}
+
+{% block page_content %}
+<div id="overview-page">
+  <!-- Stats row -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-files">—</div>
+      <div class="stat-label">Archivos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-size" style="color: var(--color-info);">—</div>
+      <div class="stat-label">Tamaño total</div>
+    </div>
+  </div>
+
+  <!-- Bucket info card -->
+  <div class="card p-5 mb-6" id="bucket-card">
+    <h2 class="text-sm font-semibold mb-3 flex items-center gap-2">
+      <i data-lucide="database" class="w-4 h-4"></i> Bucket
+    </h2>
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium" style="color: var(--color-text-muted);">Nombre</span>
+        <span id="bucket-name" class="text-sm font-semibold" style="color: var(--color-accent);">—</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium" style="color: var(--color-text-muted);">Ubicación</span>
+        <span id="bucket-location" class="text-sm font-mono" style="color: var(--color-text-secondary);">—</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-medium" style="color: var(--color-text-muted);">Clase</span>
+        <span id="bucket-class">—</span>
+      </div>
+    </div>
+    <div id="bucket-lifecycle" class="mt-3 text-xs" style="color: var(--color-text-muted); display: none;">
+      <span class="font-medium">Lifecycle:</span> <span id="lifecycle-rules"></span>
+    </div>
+  </div>
+
+  <!-- Health card -->
+  <div class="card p-5 mb-6">
+    <h2 class="text-sm font-semibold mb-4 flex items-center gap-2">
+      <i data-lucide="activity" class="w-4 h-4"></i> Estado del servicio
+    </h2>
+    <div id="health-status" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-3">
+      <div class="skeleton h-4 w-full"></div>
+      <div class="skeleton h-4 w-3/4"></div>
+    </div>
+  </div>
+
+  <!-- Recent files -->
+  <div class="card">
+    <div class="px-5 py-4 flex items-center justify-between border-b" style="border-color: var(--color-border-subtle);">
+      <h2 class="text-sm font-semibold">Últimos archivos</h2>
+      <a href="{{ base }}/dashboard/files" class="text-xs font-medium" style="color: var(--color-accent);">Ver todos →</a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="data-table w-full" id="overview-files-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Tamaño</th>
+            <th>Creado</th>
+          </tr>
+        </thead>
+        <tbody id="overview-files-body">
+          <tr><td colspan="4" class="text-center py-8"><div class="skeleton h-4 w-48 mx-auto"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  document.body.dataset.currentPage = 'overview';
+
+  function refreshCurrentPage() { loadOverview(); }
+
+  async function loadOverview() {
+    // Disparar todas las requests en paralelo y actualizar la UI a medida que llegan
+    const statsPromise = apiFetch('/stats').then(async r => {
+      if (!r?.ok) return;
+      const s = await r.json();
+      document.getElementById('stat-files').textContent = (s.totalFiles ?? 0).toLocaleString('es-AR');
+      document.getElementById('stat-size').textContent = formatBytes(s.totalSizeBytes ?? 0);
+    }).catch(() => {});
+
+    const healthPromise = fetch(BASE + '/health')
+      .then(r => r.ok ? r.json() : null).catch(() => null)
+      .then(healthResp => {
+        const healthEl = document.getElementById('health-status');
+        if (!healthResp) {
+          healthEl.innerHTML = '<div class="text-sm" style="color:var(--color-error)">No se pudo obtener el estado</div>';
+          return;
+        }
+        const deps = healthResp.dependencies || {};
+        let items = `<div class="flex items-center justify-between text-sm">
+          <span>General</span>${healthBadge(healthResp.status)}
+        </div>`;
+        for (const [name, dep] of Object.entries(deps)) {
+          const label = name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ');
+          items += `<div class="flex items-center justify-between text-sm">
+            <span style="color:var(--color-text-secondary)">${esc(label)}</span>
+            ${healthBadge(dep.status)}
+          </div>`;
+          if (dep.error) {
+            items += `<div class="text-xs font-mono pl-2 mt-0.5" style="color:var(--color-error)">${esc(dep.error)}</div>`;
+          }
+        }
+        items += `<div class="flex items-center justify-between text-sm pt-3 mt-1 border-t" style="border-color:var(--color-border-subtle)">
+          <span style="color:var(--color-text-muted)">Versión</span>
+          <span class="font-mono text-xs" style="color:var(--color-text-secondary)">v${esc(healthResp.version)} · ${esc(healthResp.environment)}</span>
+        </div>`;
+        healthEl.innerHTML = items;
+        lucide.createIcons();
+      });
+
+    const quotaPromise = apiFetch('/quota').then(async r => {
+      if (!r?.ok) return;
+      const q = await r.json();
+      document.getElementById('bucket-name').textContent = q.bucketName || '—';
+      document.getElementById('bucket-location').textContent = q.location || '—';
+      document.getElementById('bucket-class').innerHTML = storageClassBadge(q.storageClass);
+      if (q.lifecycleRules && q.lifecycleRules.length > 0) {
+        const descs = q.lifecycleRules.map(r => {
+          const action = r.action || {};
+          const cond = r.condition || {};
+          if (action.type === 'SetStorageClass') return `Mover a ${action.storageClass} a los ${cond.age || '?'} días`;
+          if (action.type === 'Delete') return `Eliminar a los ${cond.age || '?'} días`;
+          return JSON.stringify(r);
+        });
+        document.getElementById('lifecycle-rules').textContent = descs.join(' · ');
+        document.getElementById('bucket-lifecycle').style.display = '';
+      }
+      lucide.createIcons();
+    }).catch(() => {});
+
+    const filesPromise = apiFetch('/files?page_size=10').then(async r => {
+      if (!r?.ok) return;
+      const data = await r.json();
+      renderRecentFiles(data.files || []);
+    }).catch(() => {});
+
+    // Esperar a todas por si acaso (no bloquea la UI, ya se actualizó de a poco)
+    await Promise.allSettled([statsPromise, healthPromise, quotaPromise, filesPromise]);
+  }
+
+  function renderRecentFiles(files) {
+    const tbody = document.getElementById('overview-files-body');
+    if (!files.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8" style="color:var(--color-text-muted)">No hay archivos en el bucket</td></tr>';
+      return;
+    }
+    tbody.innerHTML = files.map(f => {
+      const nameEncoded = encodeURIComponent(f.name);
+      return `<tr onclick="window.location.href='${BASE}/dashboard/files?search=${nameEncoded}'">
+        <td class="font-medium flex items-center gap-2" style="color:var(--color-text-primary)">
+          <i data-lucide="${mimeIcon(f.contentType)}" class="w-4 h-4 flex-shrink-0" style="color:var(--color-text-muted)"></i>
+          <span class="truncate max-w-[300px]">${esc(f.name)}</span>
+        </td>
+        <td>${mimeBadge(f.contentType)}</td>
+        <td class="text-xs font-mono">${formatBytes(f.size)}</td>
+        <td class="text-xs whitespace-nowrap">${timeAgo(f.createdAt || f.updatedAt)}</td>
+      </tr>`;
+    }).join('');
+    lucide.createIcons();
+  }
+
+  loadOverview();
+</script>
+{% endblock %}

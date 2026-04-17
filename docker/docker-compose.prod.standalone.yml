@@ -1,0 +1,31 @@
+# ============================================================================
+# Storage Service - Docker Compose (Production Standalone — no Traefik)
+# ============================================================================
+name: storage-standalone
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    image: storage-api:${PROJECT_VERSION:-latest}
+    container_name: storage_api
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      DEBUG: "false"
+    volumes:
+      - ../credentials:/app/credentials:ro
+      - storage_logs:/app/logs
+    ports:
+      - "8086:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  storage_logs:
+    name: storage_logs
