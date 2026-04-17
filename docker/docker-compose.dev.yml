@@ -1,0 +1,23 @@
+# ============================================================================
+# Storage Service - Docker Compose (Development)
+# ============================================================================
+name: storage-dev
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.prod
+    container_name: storage_api_dev
+    env_file:
+      - ../.env
+    environment:
+      DEBUG: "true"
+      SKIP_AUTH: "true"
+    volumes:
+      - ../app:/app/app
+      - ../credentials:/app/credentials:ro
+    ports:
+      - "8086:8000"
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
