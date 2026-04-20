@@ -1,4 +1,4 @@
-"""Storage Service - Main application entry point.
+"""Storage Manager - Main application entry point.
 
 Infrastructure-agnostic: runs the same way locally, behind Traefik,
 or behind any other reverse proxy.
@@ -66,7 +66,7 @@ async def _probe_dependencies(storage_service: StorageService) -> dict[str, Depe
 async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
     """Manage application lifespan: startup and shutdown events."""
     logger.info(
-        "🚀 Starting Storage Service",
+        "🚀 Starting Storage Manager",
         extra={
             "extra_fields": {
                 "version": settings.project_version,
@@ -121,7 +121,7 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
 
     # Close shared HTTP client
     await app_instance.state.http_client.aclose()
-    logger.info("👋 Shutting down Storage Service")
+    logger.info("👋 Shutting down Storage Manager")
 
 
 # Create FastAPI application

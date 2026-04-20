@@ -70,7 +70,7 @@ def _ctx(request: Request, *, page_title: str, active_key: str, **extra) -> dict
     return {
         "request": request,
         "base": base,
-        "service_name": "Storage",
+        "service_name": "Storage Manager",
         "service_icon": "cloud",
         "nav_items": nav_items,
         "page_title": page_title,
@@ -120,9 +120,13 @@ async def dashboard_file_detail(request: Request, file_path: str):
 async def dashboard_login(request: Request):
     """Login page."""
     base = _base(request)
+    # Browser-facing URL of the identity service (POST /login, GET /me).
+    identity_external = settings.identity_external_url.rstrip("/")
     return templates.TemplateResponse("login.html", {
         "request": request,
         "base": base,
-        "service_name": "Storage",
+        "service_name": "Storage Manager",
         "service_icon": "cloud",
+        "identity_external_url": identity_external,
+        "skip_auth": settings.skip_auth,
     })

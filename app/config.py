@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     # =========================================================================
     # Application Metadata
     # =========================================================================
-    project_name: str = "Storage Service"
+    project_name: str = "FastAPI GCS Manager"
     project_version: str = "1.0.0"
     project_description: str = "Google Cloud Storage file management microservice"
     api_prefix: str = "/api/v1"
@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     def identity_me_url(self) -> str:
         """URL to validate tokens and get user info."""
         return f"{self.identity_service_url}/me"
+
+    # =========================================================================
+    # Optional source mount (for bulk upload jobs from a local/mounted folder)
+    # =========================================================================
+    source_mount_path: str = "/app/source"
 
     # =========================================================================
     # Upload Settings
