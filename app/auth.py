@@ -2,8 +2,8 @@
 
 Delegates authentication to the Identity Service by validating Bearer
 tokens against the /me endpoint. Results are cached in memory to avoid
-hitting identidad on every request (crítico durante bulk_sync: miles de
-uploads con el mismo service token).
+hitting the identity service on every request (critical during bulk
+uploads: many calls sharing the same service token).
 """
 
 import time

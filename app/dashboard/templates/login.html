@@ -1,4 +1,4 @@
-{# Login page — authenticates via identidad (cross-service). #}
+{# Login page — authenticates via the identity service (cross-service). #}
 {% extends "base.html" %}
 
 {% block title %}{{ service_name }} — Login{% endblock %}
@@ -51,7 +51,7 @@
     </form>
 
     <p class="text-center text-xs mt-6" style="color: var(--color-text-muted);">
-      Conecta al servicio de identidad para autenticarse.
+      Authenticates against the configured identity service.
     </p>
   </div>
 </div>
@@ -60,7 +60,9 @@
 {% block scripts %}
 <script>
   const BASE = '{{ base }}';
-  const IDENTITY_URL = window.location.origin + '/identidad/api/v1/login';
+  const IDENTITY_BASE = '{{ identity_external_url }}';
+  const IDENTITY_URL = IDENTITY_BASE + '/login';
+  const IDENTITY_ME_URL = IDENTITY_BASE + '/me';
   const TOKEN_KEY = 'st_token';
   const USER_KEY = 'st_user';
 
@@ -93,7 +95,7 @@
       if (resp.ok) {
         const data = await resp.json();
         localStorage.setItem(TOKEN_KEY, data.access_token);
-        const meResp = await fetch(window.location.origin + '/identidad/api/v1/me', {
+        const meResp = await fetch(IDENTITY_ME_URL, {
           headers: { 'Authorization': 'Bearer ' + data.access_token },
         });
         if (meResp && meResp.ok) {
@@ -109,7 +111,7 @@
         errorEl.classList.remove('hidden');
       }
     } catch (err) {
-      errorEl.textContent = 'No se pudo conectar al servicio de identidad';
+      errorEl.textContent = 'Could not reach the identity service';
       errorEl.classList.remove('hidden');
     } finally {
       btn.disabled = false;

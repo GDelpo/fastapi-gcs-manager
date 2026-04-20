@@ -1,15 +1,14 @@
 # ============================================================================
-# Storage Service - Docker Compose (Production with Traefik)
+# FastAPI GCS Manager - Docker Compose (Production with Traefik)
 # ============================================================================
 #
 # PREREQUISITES:
-#   1. Traefik running: docker compose -f docker-compose.traefik.yml up -d
+#   1. Traefik running on network 'traefik-public'
 #   2. Network created: docker network create traefik-public
 #   3. .env file configured in parent directory
 #   4. credentials/google_credentials.json present
 #
 # USAGE:
-#   cd storage
 #   docker compose --env-file .env -f docker/docker-compose.prod.traefik.yml up -d --build
 #   docker compose --env-file .env -f docker/docker-compose.prod.traefik.yml logs -f
 #
@@ -30,17 +29,21 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.prod
-    image: storage-api:${PROJECT_VERSION:-latest}
+    image: fastapi-gcs-manager:${PROJECT_VERSION:-latest}
     container_name: storage_api
     restart: unless-stopped
     env_file:
       - ../.env
     environment:
       DEBUG: "false"
-      IDENTITY_SERVICE_URL: http://identidad_api:8080/api/v1
-      IDENTITY_EXTERNAL_URL: http://192.168.190.95/identidad/api/v1
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL:-http://identity_api:8080/api/v1}
+      IDENTITY_EXTERNAL_URL: ${IDENTITY_EXTERNAL_URL:-http://localhost:8080/api/v1}
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME}
     volumes:
       - ../credentials:/app/credentials:ro
+      # Optional: mount a host folder as read-only source for bulk uploads.
+      # Set SOURCE_MOUNT_PATH in .env and uncomment if needed:
+      # - ${SOURCE_MOUNT_HOST_PATH:-./source}:/app/source:ro
     networks:
       - traefik-public
     labels:
