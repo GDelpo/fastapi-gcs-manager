@@ -1,7 +1,7 @@
 {# Files page — browse, search, upload, download, delete #}
 {% extends "shell.html" %}
 
-{% block title %}{{ service_name }} — Archivos{% endblock %}
+{% block title %}{{ service_name }} — Files{% endblock %}
 
 {% block page_content %}
 <div id="files-page">
@@ -11,22 +11,22 @@
     <summary class="flex items-center justify-between px-5 py-3 cursor-pointer select-none">
       <span class="text-sm font-medium flex items-center gap-2" style="color:var(--color-text-secondary)">
         <i data-lucide="sliders-horizontal" class="w-4 h-4" aria-hidden="true"></i>
-        Filtros
+        Filters
         <span id="filter-badge" class="badge badge-active hidden" style="font-size:10px">0</span>
       </span>
       <i data-lucide="chevron-down" class="w-4 h-4 filter-chevron" aria-hidden="true"></i>
     </summary>
     <div class="px-5 pb-4 pt-3 border-t" style="border-color:var(--color-border-subtle)">
       <div class="flex flex-wrap items-center gap-3">
-        <input type="text" id="filter-search" class="input max-w-xs" placeholder="Buscar por prefijo..."
+        <input type="text" id="filter-search" class="input max-w-xs" placeholder="Search by prefix..."
                oninput="updateFilterBadge()" />
         <button onclick="loadFiles()" class="btn btn-primary text-xs">
-          <i data-lucide="search" class="w-3.5 h-3.5" aria-hidden="true"></i> Buscar
+          <i data-lucide="search" class="w-3.5 h-3.5" aria-hidden="true"></i> Search
         </button>
-        <button onclick="clearFilters()" class="btn btn-ghost btn-sm">Limpiar</button>
+        <button onclick="clearFilters()" class="btn btn-ghost btn-sm">Clear</button>
         <div class="flex-1"></div>
         <button onclick="showUploadModal()" class="btn btn-success text-xs">
-          <i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Subir archivo
+          <i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Upload file
         </button>
       </div>
     </div>
@@ -34,9 +34,9 @@
 
   <!-- Stats bar -->
   <div class="flex items-center gap-4 mb-4 px-1 text-xs" style="color: var(--color-text-muted);">
-    <span>Total: <span id="stats-files" class="font-mono font-medium" style="color: var(--color-text-secondary);">—</span> archivos</span>
+    <span>Total: <span id="stats-files" class="font-mono font-medium" style="color: var(--color-text-secondary);">—</span> files</span>
     <span>·</span>
-    <span>Tamaño: <span id="stats-size" class="font-mono font-medium" style="color: var(--color-text-secondary);">—</span></span>
+    <span>Size: <span id="stats-size" class="font-mono font-medium" style="color: var(--color-text-secondary);">—</span></span>
   </div>
 
   <!-- Files table -->
@@ -47,16 +47,16 @@
           <tr>
             <th class="sortable-col cursor-pointer select-none" onclick="setSort('name')">
               <span class="flex items-center gap-1">
-                Nombre
+                Name
                 <span id="sort-name" class="sort-icon inline-flex items-center opacity-40">
                   <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i>
                 </span>
               </span>
             </th>
-            <th>Tipo</th>
+            <th>Type</th>
             <th class="sortable-col cursor-pointer select-none" onclick="setSort('size')">
               <span class="flex items-center gap-1">
-                Tamaño
+                Size
                 <span id="sort-size" class="sort-icon inline-flex items-center opacity-40">
                   <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i>
                 </span>
@@ -64,7 +64,7 @@
             </th>
             <th class="sortable-col cursor-pointer select-none" onclick="setSort('storageClass')">
               <span class="flex items-center gap-1">
-                Clase
+                Class
                 <span id="sort-storageClass" class="sort-icon inline-flex items-center opacity-40">
                   <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i>
                 </span>
@@ -72,7 +72,7 @@
             </th>
             <th class="sortable-col cursor-pointer select-none" onclick="setSort('updatedAt')">
               <span class="flex items-center gap-1">
-                Creado
+                Created
                 <span id="sort-updatedAt" class="sort-icon inline-flex items-center opacity-40">
                   <i data-lucide="chevron-up" class="w-3 h-3" aria-hidden="true"></i>
                 </span>
@@ -88,7 +88,7 @@
     </div>
     <div id="files-pagination" class="px-5 py-3 flex items-center justify-between border-t" style="border-color: var(--color-border-subtle);">
       <span class="text-xs" style="color: var(--color-text-muted);" id="files-count">—</span>
-      <button id="btn-load-more" onclick="loadMore()" class="btn btn-ghost text-xs hidden">Cargar más</button>
+      <button id="btn-load-more" onclick="loadMore()" class="btn btn-ghost text-xs hidden">Load more</button>
     </div>
   </div>
 </div>
@@ -96,10 +96,10 @@
 <!-- Upload Modal -->
 <div id="upload-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background: rgba(0,0,0,.6);">
   <div class="card p-6 w-full max-w-md mx-4">
-    <h3 class="text-base font-semibold mb-4">Subir archivo</h3>
+    <h3 class="text-base font-semibold mb-4">Upload file</h3>
     <div id="drop-zone" class="drop-zone mb-4">
       <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto mb-2" style="color: var(--color-text-muted);" aria-hidden="true"></i>
-      <p class="text-sm" style="color: var(--color-text-secondary);">Arrastrá un archivo o hacé click para seleccionar</p>
+      <p class="text-sm" style="color: var(--color-text-secondary);">Drag a file here or click to select</p>
       <input type="file" id="upload-file-input" class="hidden" multiple />
     </div>
     <div id="upload-file-list" class="space-y-2 mb-4 text-sm" style="color: var(--color-text-secondary);"></div>
@@ -110,13 +110,13 @@
     <div class="flex items-center gap-3 mb-4">
       <label class="flex items-center gap-2 text-xs cursor-pointer" style="color: var(--color-text-secondary);">
         <input type="checkbox" id="upload-skip-existing" checked class="rounded" />
-        Omitir si ya existe
+        Skip if already exists
       </label>
     </div>
     <div class="flex justify-end gap-2">
-      <button onclick="hideUploadModal()" class="btn btn-ghost text-xs">Cancelar</button>
+      <button onclick="hideUploadModal()" class="btn btn-ghost text-xs">Cancel</button>
       <button id="btn-upload" onclick="doUpload()" class="btn btn-primary text-xs">
-        <i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Subir
+        <i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Upload
       </button>
     </div>
   </div>
@@ -144,7 +144,7 @@
   // Load stats for the stats bar
   apiFetch('/stats').then(r => r?.ok ? r.json() : null).then(s => {
     if (!s) return;
-    document.getElementById('stats-files').textContent = (s.totalFiles ?? 0).toLocaleString('es-AR');
+    document.getElementById('stats-files').textContent = (s.totalFiles ?? 0).toLocaleString('en-US');
     document.getElementById('stats-size').textContent = formatBytes(s.totalSizeBytes ?? 0);
   });
 
@@ -215,7 +215,7 @@
     if (!resp?.ok) {
       if (!append) {
         document.getElementById('files-body').innerHTML =
-          '<tr><td colspan="6" class="text-center py-8" style="color:var(--color-text-muted)">Error al cargar — <a href="javascript:loadFiles()" style="color:var(--color-accent)">reintentar</a></td></tr>';
+          '<tr><td colspan="6" class="text-center py-8" style="color:var(--color-text-muted)">Loading error — <a href="javascript:loadFiles()" style="color:var(--color-accent)">retry</a></td></tr>';
       }
       return;
     }
@@ -229,8 +229,8 @@
     const info = document.getElementById('files-count');
     const hasMore = !!nextPageToken;
     info.textContent = hasMore
-      ? `Mostrando ${loadedFiles.length} archivos — hay más`
-      : `${loadedFiles.length} archivos`;
+      ? `Showing ${loadedFiles.length} files — more available`
+      : `${loadedFiles.length} files`;
 
     document.getElementById('btn-load-more').classList.toggle('hidden', !hasMore);
 
@@ -243,7 +243,7 @@
   function renderFilesTable(files) {
     const tbody = document.getElementById('files-body');
     if (!files.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8" style="color:var(--color-text-muted)">No se encontraron archivos con los filtros aplicados.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8" style="color:var(--color-text-muted)">No files found with the current filters.</td></tr>';
       return;
     }
 
@@ -266,10 +266,10 @@
         <td class="text-xs whitespace-nowrap">${timeAgo(f.createdAt || f.updatedAt)}</td>
         <td onclick="event.stopPropagation()">
           <div class="flex items-center gap-1">
-            <button onclick="downloadItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Descargar">
+            <button onclick="downloadItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Download">
               <i data-lucide="download" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
-            <button onclick="deleteItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Eliminar" style="color:var(--color-error)">
+            <button onclick="deleteItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Delete" style="color:var(--color-error)">
               <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
           </div>
@@ -289,13 +289,13 @@
   }
 
   async function deleteItem(encodedName, displayName) {
-    if (!confirm(`¿Eliminar "${displayName}"?`)) return;
+    if (!confirm(`Delete "${displayName}"?`)) return;
     const resp = await apiFetch('/files/' + encodedName, { method: 'DELETE' });
     if (resp && (resp.ok || resp.status === 204)) {
-      showToast('Archivo eliminado');
+      showToast('File deleted');
       loadFiles();
     } else {
-      showToast('Error al eliminar', 'error');
+      showToast('Delete failed', 'error');
     }
   }
 
@@ -337,14 +337,14 @@
   }
 
   async function doUpload() {
-    if (!selectedFiles.length) { showToast('Seleccioná un archivo', 'error'); return; }
+    if (!selectedFiles.length) { showToast('Select a file', 'error'); return; }
 
     const btn = document.getElementById('btn-upload');
     const progressDiv = document.getElementById('upload-progress');
     const progressBar = document.getElementById('upload-progress-bar');
     const progressText = document.getElementById('upload-progress-text');
     btn.disabled = true;
-    btn.textContent = 'Subiendo...';
+    btn.textContent = 'Uploading...';
     progressDiv.classList.remove('hidden');
     progressBar.style.width = '0%';
 
@@ -359,22 +359,22 @@
           onProgress(pct) { progressBar.style.width = pct + '%'; progressText.textContent = pct + '%'; }
         });
         if (resp?.ok || resp?.status === 201) {
-          showToast('Archivo subido correctamente');
+          showToast('File uploaded successfully');
         } else {
-          showToast('Error al subir', 'error');
+          showToast('Upload failed', 'error');
         }
       } else {
         const fd = new FormData();
         selectedFiles.forEach(f => fd.append('files', f));
         fd.append('skip_existing', skipExisting);
         const resp = await apiUpload('/files/batch', fd, {
-          onProgress(pct) { progressBar.style.width = pct + '%'; progressText.textContent = `Subiendo ${selectedFiles.length} archivos… ${pct}%`; }
+          onProgress(pct) { progressBar.style.width = pct + '%'; progressText.textContent = `Uploading ${selectedFiles.length} files… ${pct}%`; }
         });
         if (resp?.ok || resp?.status === 201) {
           const data = await resp.json();
-          showToast(`${data.successful}/${data.total} archivos subidos`);
+          showToast(`${data.successful}/${data.total} files uploaded`);
         } else {
-          showToast('Error al subir', 'error');
+          showToast('Upload failed', 'error');
         }
       }
       hideUploadModal();
@@ -383,7 +383,7 @@
       showToast('Error: ' + e.message, 'error');
     } finally {
       btn.disabled = false;
-      btn.innerHTML = '<i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Subir';
+      btn.innerHTML = '<i data-lucide="upload" class="w-3.5 h-3.5" aria-hidden="true"></i> Upload';
       progressDiv.classList.add('hidden');
       lucide.createIcons();
     }

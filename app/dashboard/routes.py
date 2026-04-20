@@ -55,8 +55,8 @@ def _base(request: Request) -> str:
 # ============================================================================
 
 _NAV_ITEMS = [
-    {"href_suffix": "/dashboard/", "icon": "bar-chart-3", "label": "Resumen", "key": "overview"},
-    {"href_suffix": "/dashboard/files", "icon": "file", "label": "Archivos", "key": "files"},
+    {"href_suffix": "/dashboard/", "icon": "bar-chart-3", "label": "Overview", "key": "overview"},
+    {"href_suffix": "/dashboard/files", "icon": "file", "label": "Files", "key": "files"},
 ]
 
 
@@ -91,7 +91,7 @@ async def dashboard_home(request: Request):
         "overview.html",
         _ctx(
             request,
-            page_title="Resumen",
+            page_title="Overview",
             active_key="overview",
             bucket_name=bucket_name,
         ),
@@ -103,7 +103,7 @@ async def dashboard_files(request: Request):
     """Files list page."""
     return templates.TemplateResponse(
         "files.html",
-        _ctx(request, page_title="Archivos", active_key="files"),
+        _ctx(request, page_title="Files", active_key="files"),
     )
 
 
@@ -112,7 +112,7 @@ async def dashboard_file_detail(request: Request, file_path: str):
     """File detail page."""
     return templates.TemplateResponse(
         "file_detail.html",
-        _ctx(request, page_title="Archivo", active_key="files", file_path=file_path),
+        _ctx(request, page_title="File", active_key="files", file_path=file_path),
     )
 
 
