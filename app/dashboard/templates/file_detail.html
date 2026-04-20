@@ -1,7 +1,7 @@
 {# File detail page — metadata, signed URL, download, delete #}
 {% extends "shell.html" %}
 
-{% block title %}{{ service_name }} — Archivo{% endblock %}
+{% block title %}{{ service_name }} — File{% endblock %}
 
 {% block page_content %}
 <div id="file-detail-page">
@@ -10,7 +10,7 @@
     <div class="flex items-center gap-4">
       <a href="{{ base }}/dashboard/files" class="btn btn-ghost p-2"><i data-lucide="arrow-left" class="w-4 h-4"></i></a>
       <div>
-        <h2 id="file-name" class="text-xl font-bold" style="word-break: break-all;">Cargando...</h2>
+        <h2 id="file-name" class="text-xl font-bold" style="word-break: break-all;">Loading...</h2>
         <p id="file-meta" class="text-sm mt-1" style="color: var(--color-text-muted);"></p>
       </div>
     </div>
@@ -21,7 +21,7 @@
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
     <!-- Metadata card -->
     <div class="card p-5">
-      <h3 class="text-sm font-semibold mb-4">Información</h3>
+      <h3 class="text-sm font-semibold mb-4">Details</h3>
       <div id="file-info" class="space-y-3">
         <div class="skeleton h-4 w-full"></div>
         <div class="skeleton h-4 w-3/4"></div>
@@ -32,28 +32,28 @@
 
     <!-- Signed URL card -->
     <div class="card p-5">
-      <h3 class="text-sm font-semibold mb-4">Enlace firmado</h3>
+      <h3 class="text-sm font-semibold mb-4">Signed URL</h3>
       <p class="text-xs mb-4" style="color: var(--color-text-muted);">
-        Genera un enlace temporal con acceso directo al archivo en Google Cloud Storage.
-        Expira en 60 minutos.
+        Generates a temporary direct link to the object in Google Cloud Storage.
+        Expires in 60 minutes.
       </p>
       <div id="signed-url-section">
         <button onclick="generateSignedUrl()" class="btn btn-primary text-xs" id="btn-gen-link">
-          <i data-lucide="link" class="w-3.5 h-3.5"></i> Generar enlace
+          <i data-lucide="link" class="w-3.5 h-3.5"></i> Generate link
         </button>
       </div>
       <div id="signed-url-result" class="hidden mt-4">
         <div class="flex items-center gap-2">
           <input type="text" id="signed-url-input" class="input font-mono text-xs" readonly />
-          <button onclick="copySignedUrl()" class="btn btn-ghost text-xs flex-shrink-0" id="btn-copy-url" title="Copiar">
+          <button onclick="copySignedUrl()" class="btn btn-ghost text-xs flex-shrink-0" id="btn-copy-url" title="Copy">
             <i data-lucide="copy" class="w-3.5 h-3.5"></i>
           </button>
-          <a id="signed-url-open" href="#" target="_blank" class="btn btn-ghost text-xs flex-shrink-0" title="Abrir">
+          <a id="signed-url-open" href="#" target="_blank" class="btn btn-ghost text-xs flex-shrink-0" title="Open">
             <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
           </a>
         </div>
         <p class="text-xs mt-2" style="color: var(--color-text-muted);">
-          Generado a las <span id="signed-url-time">—</span> · expira en 60 min
+          Generated at <span id="signed-url-time">—</span> · expires in 60 min
         </p>
       </div>
     </div>
@@ -61,12 +61,12 @@
 
   <!-- Danger zone -->
   <div class="card p-5" style="border-color: var(--color-error-soft);">
-    <h3 class="text-sm font-semibold mb-2" style="color: var(--color-error);">Zona peligrosa</h3>
+    <h3 class="text-sm font-semibold mb-2" style="color: var(--color-error);">Danger zone</h3>
     <p class="text-xs mb-4" style="color: var(--color-text-muted);">
-      Eliminar este objeto de Google Cloud Storage. Esta acción no se puede deshacer.
+      Delete this object from Google Cloud Storage. This action cannot be undone.
     </p>
     <button onclick="doDelete()" class="btn btn-danger text-xs">
-      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Eliminar archivo
+      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Delete file
     </button>
   </div>
 </div>
@@ -84,7 +84,7 @@
   async function loadFile() {
     const resp = await apiFetch('/files/' + FILE_PATH);
     if (!resp?.ok) {
-      document.getElementById('file-name').textContent = 'Archivo no encontrado';
+      document.getElementById('file-name').textContent = 'File not found';
       document.getElementById('file-meta').textContent = FILE_PATH;
       lucide.createIcons();
       return;
@@ -102,12 +102,12 @@
     // Info rows
     const info = document.getElementById('file-info');
     const rows = [
-      ['Nombre completo', `<span class="font-mono text-xs break-all">${esc(f.name)}</span>`],
-      ['Tipo', mimeBadge(f.contentType)],
-      ['Tamaño', `<span>${formatBytes(f.size)}</span>`],
-      ['Clase de almacenamiento', storageClassBadge(f.storageClass)],
-      ['Creado', `<span>${formatDate(f.createdAt)}</span>`],
-      ['Modificado', `<span>${formatDate(f.updatedAt)}</span>`],
+      ['Full name', `<span class="font-mono text-xs break-all">${esc(f.name)}</span>`],
+      ['Type', mimeBadge(f.contentType)],
+      ['Size', `<span>${formatBytes(f.size)}</span>`],
+      ['Storage class', storageClassBadge(f.storageClass)],
+      ['Created', `<span>${formatDate(f.createdAt)}</span>`],
+      ['Updated', `<span>${formatDate(f.updatedAt)}</span>`],
     ];
     if (f.md5Hash) {
       rows.push(['MD5', `<span class="font-mono text-xs" style="color:var(--color-text-muted)">${esc(f.md5Hash)}</span>`]);
@@ -121,7 +121,7 @@
     // Actions
     const actions = document.getElementById('file-actions');
     actions.innerHTML = `<button onclick="doDownload()" class="btn btn-primary text-xs">
-      <i data-lucide="download" class="w-3.5 h-3.5"></i> Descargar
+      <i data-lucide="download" class="w-3.5 h-3.5"></i> Download
     </button>`;
     lucide.createIcons();
   }
@@ -134,20 +134,20 @@
   async function generateSignedUrl() {
     const btn = document.getElementById('btn-gen-link');
     btn.disabled = true;
-    btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Generando…';
+    btn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Generating…';
     lucide.createIcons();
 
     const resp = await apiFetch('/files/' + FILE_PATH + '/link');
     btn.disabled = false;
-    btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Renovar enlace';
+    btn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Renew link';
     lucide.createIcons();
 
-    if (!resp?.ok) { showToast('Error al generar enlace', 'error'); return; }
+    if (!resp?.ok) { showToast('Could not generate link', 'error'); return; }
     const data = await resp.json();
 
     document.getElementById('signed-url-input').value = data.signedUrl;
     document.getElementById('signed-url-open').href = data.signedUrl;
-    document.getElementById('signed-url-time').textContent = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('signed-url-time').textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     document.getElementById('signed-url-result').classList.remove('hidden');
   }
 
@@ -159,22 +159,22 @@
       btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5" style="color:var(--color-success)"></i>';
       lucide.createIcons();
       setTimeout(() => { btn.innerHTML = '<i data-lucide="copy" class="w-3.5 h-3.5"></i>'; lucide.createIcons(); }, 1500);
-      showToast('Enlace copiado');
+      showToast('Link copied');
     }).catch(() => {
       const ta = document.createElement('textarea'); ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-      showToast('Enlace copiado');
+      showToast('Link copied');
     });
   }
 
   async function doDelete() {
-    if (!confirm('¿Eliminar este archivo? Esta acción no se puede deshacer.')) return;
+    if (!confirm('Delete this file? This action cannot be undone.')) return;
     const resp = await apiFetch('/files/' + FILE_PATH, { method: 'DELETE' });
     if (resp && (resp.ok || resp.status === 204)) {
-      showToast('Archivo eliminado');
+      showToast('File deleted');
       window.location.href = BASE + '/dashboard/files';
     } else {
-      showToast('Error al eliminar', 'error');
+      showToast('Delete failed', 'error');
     }
   }
 

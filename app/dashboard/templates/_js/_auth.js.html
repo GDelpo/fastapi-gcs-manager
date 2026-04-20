@@ -88,7 +88,7 @@
         headers: { 'Authorization': 'Bearer ' + token },
       });
       if (resp.status === 401 || resp.status === 403) { goLogin(); return; }
-      if (!resp.ok) { showToast('Error al descargar', 'error'); return; }
+      if (!resp.ok) { showToast('Download error', 'error'); return; }
       const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -96,7 +96,7 @@
       document.body.appendChild(a); a.click();
       setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
     } catch (e) {
-      showToast('Error al descargar: ' + e.message, 'error');
+      showToast('Download error: ' + e.message, 'error');
     }
   }
 

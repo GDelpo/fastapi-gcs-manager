@@ -3,8 +3,8 @@
   function formatDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
-    const opts = { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
-    const p = new Intl.DateTimeFormat('es-AR', opts).formatToParts(d);
+    const opts = { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hour12: false };
+    const p = new Intl.DateTimeFormat('en-GB', opts).formatToParts(d);
     const g = (t) => p.find(x => x.type === t)?.value || '';
     return `${g('hour')}:${g('minute')} ${g('day')}/${g('month')}/${g('year')}`;
   }
@@ -14,13 +14,13 @@
     const d = new Date(dateStr);
     const now = new Date();
     const secs = Math.floor((now - d) / 1000);
-    if (secs < 60) return 'hace ' + secs + 's';
+    if (secs < 60) return secs + 's ago';
     const mins = Math.floor(secs / 60);
-    if (mins < 60) return 'hace ' + mins + 'min';
+    if (mins < 60) return mins + 'm ago';
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return 'hace ' + hrs + 'h';
+    if (hrs < 24) return hrs + 'h ago';
     const days = Math.floor(hrs / 24);
-    if (days < 30) return 'hace ' + days + 'd';
+    if (days < 30) return days + 'd ago';
     return formatDate(dateStr);
   }
 
@@ -66,11 +66,11 @@
   }
 
   function mimeLabel(mimeType) {
-    if (!mimeType) return 'otro';
+    if (!mimeType) return 'other';
     if (mimeType.includes('pdf')) return 'PDF';
     if (mimeType.startsWith('image/jpeg')) return 'JPEG';
     if (mimeType.startsWith('image/png')) return 'PNG';
-    if (mimeType.startsWith('image/')) return 'imagen';
+    if (mimeType.startsWith('image/')) return 'image';
     if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'Excel';
     if (mimeType.includes('csv')) return 'CSV';
     if (mimeType.includes('word')) return 'Word';

@@ -35,8 +35,8 @@ logger = get_logger(__name__)
 
 # In-memory cache for stats (avoid listing 500k+ objects on every request)
 _stats_cache: dict = {"data": None, "ts": 0}
-_STATS_TTL = 1800  # 30 minutos — el scan de 500k+ objetos es costoso
-_stats_lock = asyncio.Lock()  # seguro a nivel de módulo en Python 3.10+
+_STATS_TTL = 1800  # 30 minutes — scanning 500k+ objects is expensive
+_stats_lock = asyncio.Lock()  # module-level lock is safe on Python 3.10+
 
 
 def _humanize_bytes(n: int) -> str:
@@ -372,19 +372,19 @@ class StorageService:
     async def get_stats(self) -> StorageStatsResponse:
         """Get file count and total size (cached, stale-while-revalidate).
 
-        Con 500k+ objetos en el bucket, el scan completo tarda varios minutos.
-        Patrón stale-while-revalidate:
-        - Cache fresco → devolver inmediatamente (O(1))
-        - Cache vencido con datos → devolver datos viejos + refresh en background
-        - Sin datos (primer request) → bloquear hasta completar el scan
-        El Lock garantiza que solo un scan corra a la vez.
+        With 500k+ objects in the bucket a full scan takes several minutes.
+        Stale-while-revalidate pattern:
+        - Fresh cache → return immediately (O(1))
+        - Expired cache with data → return stale data + background refresh
+        - No data (first request) → block until the scan completes
+        The Lock guarantees that only one scan runs at a time.
         """
         import time
 
         now = time.monotonic()
         lock = _stats_lock
 
-        # Cache fresco — respuesta inmediata sin lock
+        # Fresh cache — immediate response, no lock needed
         if _stats_cache["data"] and (now - _stats_cache["ts"]) < _STATS_TTL:
             return _stats_cache["data"]
 
@@ -407,7 +407,7 @@ class StorageService:
             _stats_cache["ts"] = time.monotonic()
 
         if _stats_cache["data"] is not None:
-            # Datos viejos: devolver inmediatamente y refrescar en background
+            # Stale data: return immediately and refresh in background
             if not lock.locked():
                 async def _bg():
                     async with lock:
@@ -418,9 +418,9 @@ class StorageService:
                 asyncio.create_task(_bg())
             return _stats_cache["data"]
 
-        # Sin datos: esperar al scan (primer request o tras restart)
+        # No data: wait for the scan (first request or after restart)
         async with lock:
-            # Otro request puede haber completado el scan mientras esperábamos
+            # Another request may have completed the scan while we were waiting
             if _stats_cache["data"] and (now - _stats_cache["ts"]) < _STATS_TTL:
                 return _stats_cache["data"]
             try:
