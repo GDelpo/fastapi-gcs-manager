@@ -24,11 +24,15 @@
     return formatDate(dateStr);
   }
 
+  // Escapes for HTML text AND quoted attributes (innerHTML-based escaping left quotes as-is).
   function esc(s) {
-    if (!s) return '';
-    const d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
+    if (s === null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   function healthBadge(status) {
@@ -88,7 +92,7 @@
   }
 
   function mimeBadge(mimeType) {
-    return `<span class="badge ${mimeBadgeClass(mimeType)}">${mimeLabel(mimeType)}</span>`;
+    return `<span class="badge ${mimeBadgeClass(mimeType)}">${esc(mimeLabel(mimeType))}</span>`;
   }
 
   function showToast(msg, type = 'success') {

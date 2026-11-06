@@ -7,6 +7,7 @@ uploads: many calls sharing the same service token).
 """
 
 import time
+
 import httpx
 from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
@@ -18,7 +19,7 @@ from app.logger import get_logger
 
 logger = get_logger(__name__)
 
-_token_cache: dict[str, tuple["TokenData", float]] = {}
+_token_cache: dict[str, tuple[TokenData, float]] = {}
 _TOKEN_CACHE_TTL = 300
 _TOKEN_CACHE_MAX = 500
 
@@ -37,7 +38,8 @@ class TokenData(BaseModel):
     role: str
 
 
-_dev_user = TokenData(id="dev-user", user_name="dev", mail="dev@local", role="service")
+# Local development only (SKIP_AUTH requires DEBUG): full access, like an admin.
+_dev_user = TokenData(id="dev-user", user_name="dev", mail="dev@local", role="admin")
 
 
 async def get_current_user(
@@ -113,7 +115,7 @@ async def service_role_required(
 async def admin_role_required(
     current_user: TokenData = Depends(get_current_user),
 ) -> TokenData:
-    """Require admin privileges."""
-    if current_user.role not in ("admin", "service"):
+    """Require admin privileges (deleting files is admin-only, not for service accounts)."""
+    if current_user.role != "admin":
         raise AuthorizationError("Admin privileges required")
     return current_user

@@ -8,7 +8,6 @@ Google Drive client.
 import asyncio
 import mimetypes
 from datetime import timedelta
-from io import BytesIO
 from pathlib import Path
 from typing import BinaryIO
 from urllib.parse import quote
@@ -18,13 +17,12 @@ from google.cloud.exceptions import GoogleCloudError, NotFound
 from google.oauth2 import service_account
 
 from app.config import settings
-from app.exceptions import EntityNotFoundError, FileUploadError, QuotaExceededError, StorageAPIError
+from app.exceptions import EntityNotFoundError, FileUploadError, StorageAPIError
 from app.logger import get_logger
 from app.schemas import (
     BatchUploadItem,
     BatchUploadResponse,
     StorageFileResponse,
-    StorageFileLinkResponse,
     StorageFileUploadResponse,
     StorageQuotaResponse,
     StorageSearchResponse,
@@ -288,16 +286,18 @@ class StorageService:
 
             files = []
             for blob in page:
-                files.append(StorageFileResponse(
-                    name=blob.name,
-                    size=blob.size,
-                    content_type=blob.content_type,
-                    created_at=blob.time_created,
-                    updated_at=blob.updated,
-                    storage_class=blob.storage_class,
-                    md5_hash=blob.md5_hash,
-                    public_url=self.generate_public_url(blob.name),
-                ))
+                files.append(
+                    StorageFileResponse(
+                        name=blob.name,
+                        size=blob.size,
+                        content_type=blob.content_type,
+                        created_at=blob.time_created,
+                        updated_at=blob.updated,
+                        storage_class=blob.storage_class,
+                        md5_hash=blob.md5_hash,
+                        public_url=self.generate_public_url(blob.name),
+                    )
+                )
 
             return StorageSearchResponse(
                 files=files,
@@ -353,9 +353,7 @@ class StorageService:
     async def get_bucket_info(self) -> StorageQuotaResponse:
         """Get bucket metadata and lifecycle rules."""
         try:
-            bucket = await asyncio.to_thread(
-                self.client.get_bucket, settings.gcs_bucket_name
-            )
+            bucket = await asyncio.to_thread(self.client.get_bucket, settings.gcs_bucket_name)
             lifecycle_rules = []
             if bucket.lifecycle_rules:
                 lifecycle_rules = [dict(rule) for rule in bucket.lifecycle_rules]
@@ -409,12 +407,14 @@ class StorageService:
         if _stats_cache["data"] is not None:
             # Stale data: return immediately and refresh in background
             if not lock.locked():
+
                 async def _bg():
                     async with lock:
                         try:
                             await _do_scan()
                         except Exception as e:
                             logger.warning("get_stats background refresh failed: %s", e)
+
                 asyncio.create_task(_bg())
             return _stats_cache["data"]
 
@@ -461,19 +461,23 @@ class StorageService:
                     content_type,
                     skip_existing=skip_existing,
                 )
-                items.append(BatchUploadItem(
-                    filename=object_name,
-                    success=True,
-                    storage_id=result.storage_id,
-                    storage_link=result.storage_link,
-                ))
+                items.append(
+                    BatchUploadItem(
+                        filename=object_name,
+                        success=True,
+                        storage_id=result.storage_id,
+                        storage_link=result.storage_link,
+                    )
+                )
                 successful += 1
             except Exception as e:
-                items.append(BatchUploadItem(
-                    filename=object_name,
-                    success=False,
-                    error=str(e),
-                ))
+                items.append(
+                    BatchUploadItem(
+                        filename=object_name,
+                        success=False,
+                        error=str(e),
+                    )
+                )
                 failed += 1
 
         return BatchUploadResponse(

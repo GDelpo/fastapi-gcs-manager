@@ -1,6 +1,6 @@
 """Application settings and configuration."""
 
-from pydantic import Field, SecretStr, computed_field, model_validator
+from pydantic import Field, computed_field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -73,11 +73,6 @@ class Settings(BaseSettings):
         return f"{self.identity_service_url}/me"
 
     # =========================================================================
-    # Optional source mount (for bulk upload jobs from a local/mounted folder)
-    # =========================================================================
-    source_mount_path: str = "/app/source"
-
-    # =========================================================================
     # Upload Settings
     # =========================================================================
     max_upload_size_mb: int = 100
@@ -98,15 +93,14 @@ class Settings(BaseSettings):
     def validate_settings(self):
         """Derive defaults for optional fields."""
         if self.environment is None:
-            object.__setattr__(
-                self, "environment", "development" if self.debug else "production"
-            )
+            object.__setattr__(self, "environment", "development" if self.debug else "production")
         if self.log_level is None:
-            object.__setattr__(
-                self, "log_level", "DEBUG" if self.debug else "INFO"
-            )
+            object.__setattr__(self, "log_level", "DEBUG" if self.debug else "INFO")
         else:
             object.__setattr__(self, "log_level", self.log_level.upper())
+        # INTENTIONAL: SKIP_AUTH turns every request into an admin; refuse it outside debug.
+        if self.skip_auth and not self.debug:
+            raise ValueError("SKIP_AUTH=true is only allowed together with DEBUG=true")
         return self
 
 

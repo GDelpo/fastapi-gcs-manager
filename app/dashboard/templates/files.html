@@ -250,7 +250,9 @@
     tbody.innerHTML = files.map(f => {
       const nameEncoded = encodeURIComponent(f.name);
       const shortName = f.name.split('/').pop();
-      return `<tr class="cursor-pointer" onclick="window.location.href='${BASE}/dashboard/files/${nameEncoded}'">
+      // INTENTIONAL: names go into data-* attributes, never into inline JS. A file name
+      // with a quote used to break out of the onclick string (stored XSS).
+      return `<tr class="cursor-pointer" data-href="${esc(BASE + '/dashboard/files/' + nameEncoded)}">
         <td style="color:var(--color-text-primary)">
           <div class="flex items-center gap-2">
             <i data-lucide="${mimeIcon(f.contentType)}" class="w-4 h-4 flex-shrink-0" style="color:var(--color-text-muted)" aria-hidden="true"></i>
@@ -264,12 +266,12 @@
         <td class="text-xs font-mono">${formatBytes(f.size)}</td>
         <td>${storageClassBadge(f.storageClass)}</td>
         <td class="text-xs whitespace-nowrap">${timeAgo(f.createdAt || f.updatedAt)}</td>
-        <td onclick="event.stopPropagation()">
+        <td data-no-nav>
           <div class="flex items-center gap-1">
-            <button onclick="downloadItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Download">
+            <button data-action="download" data-name="${esc(nameEncoded)}" data-label="${esc(shortName)}" class="btn btn-ghost text-xs p-1.5" title="Download">
               <i data-lucide="download" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
-            <button onclick="deleteItem('${nameEncoded}', '${esc(shortName)}')" class="btn btn-ghost text-xs p-1.5" title="Delete" style="color:var(--color-error)">
+            <button data-action="delete" data-name="${esc(nameEncoded)}" data-label="${esc(shortName)}" class="btn btn-ghost text-xs p-1.5" title="Delete" style="color:var(--color-error)">
               <i data-lucide="trash-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
             </button>
           </div>
@@ -279,6 +281,20 @@
 
     lucide.createIcons();
   }
+
+  // One delegated listener for row navigation and the row buttons.
+  document.getElementById('files-body').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (button) {
+      const { action, name, label } = button.dataset;
+      if (action === 'download') downloadItem(name, label);
+      if (action === 'delete') deleteItem(name, label);
+      return;
+    }
+    if (event.target.closest('td[data-no-nav]')) return;
+    const row = event.target.closest('tr[data-href]');
+    if (row) window.location.href = row.dataset.href;
+  });
 
   // Keep old renderFiles as alias for compatibility (e.g. any external call)
   function renderFiles() { renderFilesTable(sortData(loadedFiles)); }

@@ -41,9 +41,6 @@ services:
       GCS_BUCKET_NAME: ${GCS_BUCKET_NAME}
     volumes:
       - ../credentials:/app/credentials:ro
-      # Optional: mount a host folder as read-only source for bulk uploads.
-      # Set SOURCE_MOUNT_PATH in .env and uncomment if needed:
-      # - ${SOURCE_MOUNT_HOST_PATH:-./source}:/app/source:ro
     networks:
       - traefik-public
     labels:

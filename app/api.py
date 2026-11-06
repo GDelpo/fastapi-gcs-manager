@@ -2,16 +2,15 @@
 
 import mimetypes
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 
-from fastapi import APIRouter, File, Form, Query, Response, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile
 
 from app.config import settings
 from app.dependencies import AdminUser, CurrentUser, ServiceUser, StorageServiceDep
 from app.schemas import (
     BatchUploadResponse,
-    StorageFileResponse,
     StorageFileLinkResponse,
+    StorageFileResponse,
     StorageFileUploadResponse,
     StorageQuotaResponse,
     StorageSearchResponse,
@@ -19,6 +18,27 @@ from app.schemas import (
 )
 
 router = APIRouter(prefix="/api/v1", tags=["storage"])
+
+_CHUNK_SIZE = 1024 * 1024
+
+
+async def _read_limited(upload: UploadFile) -> bytes:
+    """Read an upload, refusing it once it passes MAX_UPLOAD_SIZE_MB.
+
+    Reads in chunks so an oversized file is rejected without holding all of it.
+    """
+    limit = settings.max_upload_size_mb * 1024 * 1024
+    chunks: list[bytes] = []
+    total = 0
+    while chunk := await upload.read(_CHUNK_SIZE):
+        total += len(chunk)
+        if total > limit:
+            raise HTTPException(
+                status_code=413,
+                detail=f"{upload.filename} exceeds the {settings.max_upload_size_mb} MB upload limit",
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 # ============================================================================
@@ -42,8 +62,10 @@ async def upload_file(
 ):
     """Upload a file to the storage bucket."""
     object_name = custom_name or file.filename
-    content_type = file.content_type or mimetypes.guess_type(object_name)[0] or "application/octet-stream"
-    content = await file.read()
+    content_type = (
+        file.content_type or mimetypes.guess_type(object_name)[0] or "application/octet-stream"
+    )
+    content = await _read_limited(file)
 
     return await service.upload_file_from_bytes(
         data=content,
@@ -73,7 +95,7 @@ async def batch_upload(
         object_name = upload_file_item.filename
         content_type = upload_file_item.content_type or "application/octet-stream"
         try:
-            content = await upload_file_item.read()
+            content = await _read_limited(upload_file_item)
             result = await service.upload_file_from_bytes(
                 data=content,
                 object_name=object_name,
@@ -82,21 +104,25 @@ async def batch_upload(
             )
             from app.schemas import BatchUploadItem
 
-            items.append(BatchUploadItem(
-                filename=object_name,
-                success=True,
-                storage_id=result.storage_id,
-                storage_link=result.storage_link,
-            ))
+            items.append(
+                BatchUploadItem(
+                    filename=object_name,
+                    success=True,
+                    storage_id=result.storage_id,
+                    storage_link=result.storage_link,
+                )
+            )
             successful += 1
         except Exception as e:
             from app.schemas import BatchUploadItem
 
-            items.append(BatchUploadItem(
-                filename=object_name,
-                success=False,
-                error=str(e),
-            ))
+            items.append(
+                BatchUploadItem(
+                    filename=object_name,
+                    success=False,
+                    error=str(e),
+                )
+            )
             failed += 1
 
     return BatchUploadResponse(

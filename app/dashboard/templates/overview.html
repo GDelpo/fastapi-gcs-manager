@@ -160,7 +160,7 @@
     }
     tbody.innerHTML = files.map(f => {
       const nameEncoded = encodeURIComponent(f.name);
-      return `<tr onclick="window.location.href='${BASE}/dashboard/files?search=${nameEncoded}'">
+      return `<tr class="cursor-pointer" data-href="${esc(BASE + '/dashboard/files?search=' + nameEncoded)}">
         <td class="font-medium flex items-center gap-2" style="color:var(--color-text-primary)">
           <i data-lucide="${mimeIcon(f.contentType)}" class="w-4 h-4 flex-shrink-0" style="color:var(--color-text-muted)"></i>
           <span class="truncate max-w-[300px]">${esc(f.name)}</span>
@@ -172,6 +172,11 @@
     }).join('');
     lucide.createIcons();
   }
+
+  document.getElementById('overview-files-body').addEventListener('click', (event) => {
+    const row = event.target.closest('tr[data-href]');
+    if (row) window.location.href = row.dataset.href;
+  });
 
   loadOverview();
 </script>

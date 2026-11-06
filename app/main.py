@@ -4,10 +4,10 @@ Infrastructure-agnostic: runs the same way locally, behind Traefik,
 or behind any other reverse proxy.
 """
 
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
 import asyncio
 import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import httpx
 import uvicorn
@@ -26,7 +26,7 @@ from app.exceptions import (
     validation_exception_handler,
 )
 from app.logger import configure_logging, get_logger
-from app.middleware import RequestLoggingMiddleware, ProxyHeadersMiddleware
+from app.middleware import ProxyHeadersMiddleware, RequestLoggingMiddleware
 from app.schemas import DependencyStatus, HealthResponse
 from app.service import StorageService
 
@@ -88,7 +88,7 @@ async def lifespan(app_instance: FastAPI) -> AsyncIterator[None]:
         else:
             logger.warning("⚠️ GCS bucket connection failed — will retry in background")
             app_instance.state.storage_connected = False
-    except (Exception, asyncio.TimeoutError) as e:
+    except (TimeoutError, Exception) as e:
         logger.warning("⚠️ Could not initialize Storage service: %s", e)
         app_instance.state.storage_connected = False
 

@@ -5,9 +5,8 @@ from typing import Annotated
 import httpx
 from fastapi import Depends, Request
 
-from app.auth import TokenData, get_current_user, service_role_required, admin_role_required
+from app.auth import TokenData, admin_role_required, get_current_user, service_role_required
 from app.service import StorageService
-
 
 # ============================================================================
 # Authentication Dependencies (re-exported from auth.py)

@@ -81,7 +81,9 @@ class RequestLoggingMiddleware:
         start_time = time.time()
 
         logger.info(
-            "📥 %s %s", method, path,
+            "📥 %s %s",
+            method,
+            path,
             extra={
                 "extra_fields": {
                     "request_id": request_id,
@@ -110,7 +112,10 @@ class RequestLoggingMiddleware:
         except Exception as exc:
             duration_ms = (time.time() - start_time) * 1000
             logger.error(
-                "❌ %s %s - Exception (%s)", method, path, type(exc).__name__,
+                "❌ %s %s - Exception (%s)",
+                method,
+                path,
+                type(exc).__name__,
                 extra={
                     "extra_fields": {
                         "request_id": request_id,
@@ -137,7 +142,12 @@ class RequestLoggingMiddleware:
 
         logger.log(
             log_level,
-            "%s %s %s - %s (%.2fms)", emoji, method, path, status_code, duration_ms,
+            "%s %s %s - %s (%.2fms)",
+            emoji,
+            method,
+            path,
+            status_code,
+            duration_ms,
             extra={
                 "extra_fields": {
                     "request_id": request_id,
